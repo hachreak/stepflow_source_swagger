@@ -29,3 +29,14 @@ User      |                                                                  |
 
     # Append a new event
     $ http POST http://0.0.0.0:8080/api/events body=hello
+
+Note
+----
+
+You can run rabbitmq with docker:
+
+    $ docker run --rm --hostname my-rabbit --name some-rabbit -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+
+And open the web interface:
+
+    $ firefox http://0.0.0.0:15672/#/
