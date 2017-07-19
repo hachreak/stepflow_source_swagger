@@ -12,6 +12,8 @@
 %% Application callbacks
 -export([start/2, stop/1]).
 
+-export([start/1]).
+
 -type appctx() :: any().
 
 %%====================================================================
@@ -19,50 +21,50 @@
 %%====================================================================
 
 start(_StartType, _StartArgs) ->
-  Filename = swagger_filename(),
-  Yaml = swagger_routerl:load(Filename),
-  {ok, SwaggerFileRaw} = file:read_file(Filename),
-
-  http(Yaml, SwaggerFileRaw),
-  tcp(Yaml),
-
   stepflow_source_swagger_sup:start_link().
 
 %%--------------------------------------------------------------------
 stop(_State) ->
   ok.
 
+start(Ctx) ->
+  Filename = swagger_filename(),
+  Yaml = swagger_routerl:load(Filename),
+  {ok, SwaggerFileRaw} = file:read_file(Filename),
+
+  http(Yaml, SwaggerFileRaw, Ctx),
+  tcp(Yaml, Ctx).
+
 %%====================================================================
 %% Internal functions
 %%====================================================================
 
-tcp(Yaml) ->
+tcp(Yaml, #{port_tcp := Port, drvctx := DrvCtx}) ->
   {Name, Port, Handler, AppCtx} = swagger_routerl_tcp:compile(
-    "stepflow_source_swagger_socket_", Yaml, #{}, #{
-      name => "stepflow_source_swagger_service", port => 12345
+    "stepflow_source_swagger_socket_", Yaml, DrvCtx, #{
+      name => "stepflow_source_swagger_service", port => Port
     }),
 
   {ok, _} = ranch:start_listener(
     Name, 100, ranch_tcp, [{port, Port}], Handler, AppCtx).
 
-http(Yaml, SwaggerFileRaw) ->
+http(Yaml, SwaggerFileRaw, #{port_http := Port}=Ctx) ->
   Dispatch = cowboy_router:compile([
-    {'_', routes(#{protocol => http}, Yaml, SwaggerFileRaw)}
+    {'_', routes(Ctx, Yaml, SwaggerFileRaw)}
   ]),
-  {ok, _} = cowboy:start_http(http, 100, [{port, 8080}], [
+  {ok, _} = cowboy:start_http(http, 100, [{port, Port}], [
     {env, [{dispatch, Dispatch}]}
   ]).
 
 -spec routes(appctx(), list(), binary()) -> cowboy_router:routes().
-routes(#{protocol := Protocol}, Yaml, SwaggerFileRaw) ->
+routes(#{http_protocol := Protocol, drvctx := DrvCtx}, Yaml, SwaggerFileRaw) ->
   FileEndpoint = swagger_routerl_cowboy_rest:file_endpoint(
     SwaggerFileRaw, #{endpoint => endpoint(Yaml),
     protocol => swagger_routerl_utils:to_binary(Protocol)}),
-  Db = ets:new(pets, [set, named_table, public]),
   RestEndpoints = swagger_routerl_cowboy_rest:compile(
-    "stepflow_source_swagger_rest_", Yaml, #{db => Db}),
+    "stepflow_source_swagger_rest_", Yaml, DrvCtx),
   WSEndpoint = swagger_routerl_cowboy_ws:compile(
-    "stepflow_source_swagger_socket_", Yaml, #{}, #{
+    "stepflow_source_swagger_socket_", Yaml, DrvCtx, #{
     handler => swagger_routerl_cowboy_v1_ws_json_dispatcher
   }),
 

@@ -13,7 +13,6 @@
 
 %%%_ * API -------------------------------------------------------------
 
-post(#{<<"event">> := Event}, Req, [], AppCtx) ->
-  io:format("POST ~p~n", [Event]),
-  % NewAppCtx = AppCtx#{Id => Event},
+post(#{<<"event">> := Event}, Req, [], #{pid := PidS}=AppCtx) ->
+  stepflow_source_swagger_source:sync_append(PidS, Event),
   {reply, #{}, Req, AppCtx}.

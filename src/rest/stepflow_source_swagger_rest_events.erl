@@ -40,19 +40,8 @@ content_types_provided(Req, AppCtx) ->
 allow_missing_post(Req, AppCtx) ->
   {true, Req, AppCtx}.
 
-% resource_exists(Req, #{id := Id, db := Db}=AppCtx) ->
-%   case ets:lookup(Db, Id) of
-%     [] -> {false, Req, AppCtx};
-%     _ -> {true, Req, AppCtx}
-%   end.
-
-% delete_resource(Req, #{id := Id, db := Db}=AppCtx) ->
-%   ets:delete(Db, Id),
-%   {true, Req, AppCtx}.
-
-from_json(Req, AppCtx) ->
+from_json(Req, #{pid := PidS}=AppCtx) ->
   {ok, Body, Req2} = cowboy_req:body(Req),
-  Input = jsx:decode(Body),
-  % ets:insert(Db, {Id, Input}),
-  io:format("POST(REST): ~p~n", [Input]),
+  Event = jsx:decode(Body, [return_maps]),
+  stepflow_source_swagger_source:sync_append(PidS, Event),
   {true, Req2, AppCtx}.
