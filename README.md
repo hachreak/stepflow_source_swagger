@@ -27,8 +27,25 @@ User      |                                                                  |
     5> Output = [ChCtx2].
     6> {PidSub, PidS, PidC} = stepflow_agent_sup:new(Input, Output).
 
-    # Append a new event
+#### Append a new event via REST
+
     $ http POST http://0.0.0.0:8080/api/events body=hello
+
+#### Append a new event via TCP socket
+
+```python
+import socket
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect(('0.0.0.0', 12345))
+s.send('{"path": "/events", "method": "post", "event": {"body": "hello"}}')
+```
+
+#### Append a new event via Websocket
+
+    $ open ws://0.0.0.0:8080/websocket
+
+    Send `{"path": "/events", "method": "post", "event": {"body": "hello"}}`
+    Receive `{"context":{},"result":"ok"}`
 
 Note
 ----
