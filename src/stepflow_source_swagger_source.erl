@@ -41,7 +41,7 @@ start_link(Config) ->
 
 -spec init(list(ctx())) -> {ok, ctx()}.
 init([Config]) ->
-  stepflow_source_swagger_app:start(
+  stepflow_source_swagger_services:start(
     #{port_tcp => 12345, port_http => 8080, http_protocol => http,
       drvctx => #{pid => self()}}),
   {ok, Config#{channels => []}}.
