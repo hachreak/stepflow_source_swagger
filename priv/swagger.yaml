@@ -1,0 +1,36 @@
+swagger: '2.0'
+info:
+  version: '1.0.0'
+  title: StepFlow Events Source Handler
+host: stepflow.fixme
+basePath: /api
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /events:
+    post:
+      operationId: addEvents
+      parameters:
+        - name: event
+          in: body
+          description: A event.
+          required: true
+          schema:
+            $ref: '#/definitions/event'
+      responses:
+        '201':
+          description: event inserted
+definitions:
+  event:
+    type: object
+    required:
+      - body
+    properties:
+      headers:
+        type: object
+      body:
+        type: object

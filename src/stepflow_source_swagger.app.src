@@ -1,0 +1,20 @@
+{application, stepflow_source_swagger,
+ [{description, "Source plugins for stepflow: TCP, REST, Websockets."},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {mod, { stepflow_source_swagger_app, []}},
+  {applications,
+   [
+    cowboy,
+    jsx,
+    kernel,
+    stdlib,
+    swagger_routerl
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {maintainers, []},
+  {licenses, []},
+  {links, []}
+ ]}.
