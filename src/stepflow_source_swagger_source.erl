@@ -76,6 +76,5 @@ code_change(_OldVsn, Ctx, _Extra) ->
 append(Event, #{inctxs := InCtxs, channels := ChPids}=Ctx) ->
   Event2 = stepflow_event:new(maps:get(<<"headers">>, Event, #{}),
                               maps:get(<<"body">>, Event, #{})),
-  % FIXME return {ok, _}
-  InCtxs2 = stepflow_source:append(ChPids, Event2, InCtxs),
+  {ok, InCtxs2} = stepflow_source:append(ChPids, Event2, InCtxs),
   Ctx#{inctxs := InCtxs2}.
