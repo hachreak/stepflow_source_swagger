@@ -15,22 +15,24 @@ paths:
     post:
       operationId: addEvents
       parameters:
-        - name: event
+        - name: events
           in: body
-          description: A event.
+          description: A events.
           required: true
           schema:
-            $ref: '#/definitions/event'
+            $ref: '#/definitions/events'
       responses:
         '201':
-          description: event inserted
+          description: events inserted
 definitions:
-  event:
-    type: object
-    required:
-      - body
-    properties:
-      headers:
-        type: object
-      body:
-        type: object
+  events:
+    type: array
+    items:
+      type: object
+      required:
+        - body
+      properties:
+        headers:
+          type: object
+        body:
+          type: object

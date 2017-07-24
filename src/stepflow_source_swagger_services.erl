@@ -20,8 +20,8 @@ start(Ctx) ->
   Yaml = swagger_routerl:load(Filename),
   {ok, SwaggerFileRaw} = file:read_file(Filename),
 
-  http(Yaml, SwaggerFileRaw, Ctx),
-  tcp(Yaml, Ctx).
+  {ok, _} = http(Yaml, SwaggerFileRaw, Ctx),
+  {ok, _} = tcp(Yaml, Ctx).
 
 %%====================================================================
 %% Internal functions
@@ -33,14 +33,14 @@ tcp(Yaml, #{port_tcp := Port, drvctx := DrvCtx}) ->
       name => "stepflow_source_swagger_service", port => Port
     }),
 
-  {ok, _} = ranch:start_listener(
+  ranch:start_listener(
     Name, 100, ranch_tcp, [{port, Port}], Handler, AppCtx).
 
 http(Yaml, SwaggerFileRaw, #{port_http := Port}=Ctx) ->
   Dispatch = cowboy_router:compile([
     {'_', routes(Ctx, Yaml, SwaggerFileRaw)}
   ]),
-  {ok, _} = cowboy:start_http(http, 100, [{port, Port}], [
+  cowboy:start_http(http, 100, [{port, Port}], [
     {env, [{dispatch, Dispatch}]}
   ]).
 

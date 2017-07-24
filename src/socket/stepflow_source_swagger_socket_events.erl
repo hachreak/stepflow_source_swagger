@@ -13,6 +13,6 @@
 
 %%%_ * API -------------------------------------------------------------
 
-post(#{<<"event">> := Event}, Req, [], #{pid := PidS}=AppCtx) ->
-  stepflow_source_swagger_source:sync_append(PidS, Event),
+post(#{<<"events">> := Events}, Req, [], #{pid := PidS}=AppCtx) ->
+  stepflow_source_swagger_source:sync_append(PidS, Events),
   {reply, #{}, Req, AppCtx}.

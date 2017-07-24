@@ -42,6 +42,6 @@ allow_missing_post(Req, AppCtx) ->
 
 from_json(Req, #{pid := PidS}=AppCtx) ->
   {ok, Body, Req2} = cowboy_req:body(Req),
-  Event = jsx:decode(Body, [return_maps]),
-  stepflow_source_swagger_source:sync_append(PidS, Event),
+  Events = jsx:decode(Body, [return_maps]),
+  stepflow_source_swagger_source:sync_append(PidS, Events),
   {true, Req2, AppCtx}.

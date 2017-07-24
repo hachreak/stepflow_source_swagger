@@ -29,9 +29,9 @@
 
 %% API
 
--spec sync_append(pid(), event()) -> ok | {noproc, any()}.
-sync_append(Pid, Event) ->
-  gen_server:call(Pid, {append, Event}).
+-spec sync_append(pid(), list(event())) -> ok | {noproc, any()}.
+sync_append(Pid, Events) ->
+  gen_server:call(Pid, {append, Events}).
 
 %% Callbacks gen_server
 
@@ -50,13 +50,13 @@ init([Config]) ->
     {reply, ok, ctx()}.
 handle_call({setup_channel, ChPid}, _From, #{channels := Channels}=Ctx) ->
   {reply, ok, Ctx#{channels => [ChPid | Channels]}};
-handle_call({append, Event}, _From, Ctx) ->
-  Ctx2 = append(Event, Ctx),
+handle_call({append, Events}, _From, Ctx) ->
+  Ctx2 = append(Events, Ctx),
   {reply, ok, Ctx2};
 handle_call(Input, _From, Ctx) ->
   {reply, Input, Ctx}.
 
--spec handle_cast({append, event()}, ctx()) -> {noreply, ctx()}.
+-spec handle_cast({append, list(event())}, ctx()) -> {noreply, ctx()}.
 handle_cast(_, Ctx) ->
   {noreply, Ctx}.
 
@@ -73,8 +73,11 @@ code_change(_OldVsn, Ctx, _Extra) ->
 
 %% Private functions
 
-append(Event, #{inctxs := InCtxs, channels := ChPids}=Ctx) ->
-  Event2 = stepflow_event:new(maps:get(<<"headers">>, Event, #{}),
-                              maps:get(<<"body">>, Event, #{})),
-  {ok, InCtxs2} = stepflow_source:append(ChPids, Event2, InCtxs),
+append(Events, #{inctxs := InCtxs, channels := ChPids}=Ctx) ->
+  Events2 = lists:map(fun(Event) ->
+      Body = maps:get(<<"body">>, Event, #{}),
+      Headers = maps:get(<<"headers">>, Event, #{}),
+      stepflow_event:new(Headers, Body)
+    end, Events),
+  {ok, InCtxs2} = stepflow_source:append(ChPids, Events2, InCtxs),
   Ctx#{inctxs := InCtxs2}.

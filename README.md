@@ -14,22 +14,22 @@ User      |                                                                  |
  |        |     Source <---------------> Channel <--------> Sink             |
  +------->| (tcp, REST, Websocket)     (rabbitmq)       (echo on console)    |
    POST   |                                                                  |
-   Event  +------------------------------------------------------------------+
- <<"hello">>
+   Events +------------------------------------------------------------------+
+ [<<"hello">>]
 ```
 
-    $ rebar3 auto --sname pippo --apps stepflow_source_swagger
+    $ rebar3 shell --sname pippo --apps stepflow_source_swagger
 
     1> SrcCtx = {[{stepflow_interceptor_counter, #{header => mycounter}}, {stepflow_interceptor_echo, #{}}], #{}}.
     2> Input = {stepflow_source_swagger_source, SrcCtx}.
-    3> {ok, SkCtx2} = stepflow_sink:config(stepflow_sink_echo, nope, [{stepflow_interceptor_echo, {}}]).
+    3> {ok, SkCtx2} = stepflow_sink:config(stepflow_sink_echo, #{}, [{stepflow_interceptor_echo, #{}}]).
     4> ChCtx2 = {stepflow_channel_rabbitmq, #{}, SkCtx2}.
     5> Output = [ChCtx2].
     6> {PidSub, PidS, PidC} = stepflow_agent_sup:new(Input, Output).
 
 #### Append a new event via REST
 
-    $ http POST http://0.0.0.0:8080/api/events body=hello
+    $ echo '[{"body": "hello"}]' |  http POST http://0.0.0.0:8080/api/events
 
 #### Append a new event via TCP socket
 
@@ -37,14 +37,14 @@ User      |                                                                  |
 import socket
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect(('0.0.0.0', 12345))
-s.send('{"path": "/events", "method": "post", "event": {"body": "hello"}}')
+s.send('{"path": "/events", "method": "post", "events": [{"body": "hello"}]}')
 ```
 
 #### Append a new event via Websocket
 
     $ open ws://0.0.0.0:8080/websocket
 
-    Send `{"path": "/events", "method": "post", "event": {"body": "hello"}}`
+    Send `{"path": "/events", "method": "post", "events": [{"body": "hello"}]}`
     Receive `{"context":{},"result":"ok"}`
 
 Note
